@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ไขความลับวันพระ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #fffaf0, #f7e7ff);
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: #2a1b3d;
+        }
+
+        .card {
+            width: min(92vw, 500px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e8d8f7;
+            border-radius: 18px;
+            box-shadow: 0 14px 40px rgba(79, 35, 112, 0.15);
+            padding: 28px 24px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2rem, 4vw, 2.4rem);
+            text-align: center;
+            color: #4b2c72;
+        }
+
+        .subtitle {
+            margin: 0 0 22px;
+            text-align: center;
+            color: #66547d;
+            font-size: 1rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 10px;
+            border: 1px solid #d7c9ee;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: center;
+            background: #fff;
+        }
+
+        input:focus {
+            outline: 2px solid #d8b4ff;
+            border-color: #a977d9;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 18px rgba(139, 92, 246, 0.28);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 22px;
+            background: #f7f3ff;
+            border: 1px solid #e8d8f7;
+            border-radius: 14px;
+            padding: 18px 16px;
+            min-height: 120px;
+            line-height: 1.7;
+            color: #3d2d59;
+            font-size: 0.98rem;
+        }
+
+        .result strong {
+            color: #4b2c72;
+        }
+
+        @media (max-width: 480px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🌙 ไขความลับวันพระ</h1>
+        <p class="subtitle">โปรแกรมคำนวณวันพระจากวันที่</p>
+
+        <div class="input-grid">
+            <input id="dayInput" type="number" min="1" max="31" placeholder="วันที่" inputmode="numeric">
+            <input id="monthInput" type="number" min="1" max="12" placeholder="เดือน" inputmode="numeric">
+            <input id="yearInput" type="number" min="1900" placeholder="พ.ศ." inputmode="numeric">
+        </div>
+
+        <button type="button" onclick="calculateDate()">คำนวณ</button>
+
+        <div id="result" class="result">
+            <strong>ผลลัพธ์:</strong><br>
+            กรุณากรอกวันที่และกดคำนวณ
+        </div>
+    </div>
+
+    <script>
+        function calculateDate() {
+            const day = Number(document.getElementById('dayInput').value);
+            const month = Number(document.getElementById('monthInput').value);
+            const year = Number(document.getElementById('yearInput').value);
+            const resultBox = document.getElementById('result');
+
+            if (!day || !month || !year) {
+                resultBox.innerHTML = '<strong>ผลลัพธ์:</strong><br>กรุณากรอกวันที่ เดือน และปีให้ครบถ้วน';
+                return;
+            }
+
+            const date = new Date(year - 543, month - 1, day);
+            if (
+                Number.isNaN(date.getTime()) ||
+                date.getFullYear() !== year - 543 ||
+                date.getMonth() !== month - 1 ||
+                date.getDate() !== day
+            ) {
+                resultBox.innerHTML = '<strong>ผลลัพธ์:</strong><br>วันที่ที่กรอกไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
+                return;
+            }
+
+            const thaiDateText = new Intl.DateTimeFormat('th-TH', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }).format(date);
+
+            const buddhistYear = year + 543;
+            const moonInfo = getMoonInfo(date);
+            const isHolyDay = moonInfo.isHolyDay ? 'ใช่' : 'ไม่ใช่';
+
+            resultBox.innerHTML = `
+                <strong>ผลลัพธ์:</strong><br>
+                วันที่: ${day}/${month}/${buddhistYear}<br>
+                ${thaiDateText}<br>
+                วันพระ: <strong>${isHolyDay}</strong><br>
+                ${moonInfo.label}
+            `;
+        }
+
+        function getMoonInfo(date) {
+            const referenceNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
+            const synodicMonth = 29.53058867;
+            const dayMs = 86400000;
+            const timestamp = Date.UTC(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            );
+
+            const daysSinceNewMoon = (timestamp - referenceNewMoon) / dayMs;
+            const moonAge = ((daysSinceNewMoon % synodicMonth) + synodicMonth) % synodicMonth;
+            const phase = moonAge / synodicMonth;
+
+            let label = 'วันธรรมดา';
+            let isHolyDay = false;
+
+            if (phase >= 0.22 && phase <= 0.29) {
+                label = 'ขึ้น 8 ค่ำ';
+                isHolyDay = true;
+            } else if (phase >= 0.46 && phase <= 0.54) {
+                label = 'ขึ้น 15 ค่ำ';
+                isHolyDay = true;
+            } else if (phase >= 0.72 && phase <= 0.79) {
+                label = 'แรม 8 ค่ำ';
+                isHolyDay = true;
+            } else if (phase >= 0.96 || phase <= 0.04) {
+                label = 'แรม 15 ค่ำ';
+                isHolyDay = true;
+            } else if (phase < 0.25) {
+                label = 'ขึ้น 1 ค่ำ';
+            } else if (phase < 0.5) {
+                label = 'ขึ้น 5 ค่ำ';
+            } else if (phase < 0.75) {
+                label = 'แรม 5 ค่ำ';
+            } else {
+                label = 'แรม 1 ค่ำ';
+            }
+
+            return {
+                label: `ประมาณจันทรคติ: ${label}`,
+                isHolyDay
+            };
+        }
+    </script>
+</body>
+</html>
